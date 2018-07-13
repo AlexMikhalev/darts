@@ -5,6 +5,14 @@ import torch.nn as nn
 from torch.autograd import Variable
 from model_search import Network
 
+import logging
+
+log_format = '%(asctime)s %(message)s'
+logging.basicConfig(stream=sys.stdout, level=logging.INFO,
+    format=log_format, datefmt='%m/%d %I:%M:%S %p')
+fh = logging.FileHandler(os.path.join(args.save, 'log.txt'))
+fh.setFormatter(logging.Formatter(log_format))
+logging.getLogger().addHandler(fh)
 
 def _concat(xs):
   return torch.cat([x.view(-1) for x in xs])
@@ -43,13 +51,16 @@ class Architect(object):
     return grad_norm
 
   def _backward_step(self, input_valid, target_valid):
+    logging.info('GPU memory usage ', torch.cuda.max_memory_allocated())
     loss = self.model._loss(input_valid, target_valid)
+    
     for v in self.model.arch_parameters():
       if v.grad is not None:
         v.grad.data.zero_()
     loss.backward()
 
   def _backward_step_unrolled(self, input_train, target_train, input_valid, target_valid, eta, network_optimizer):
+    logging.info('GPU memory usage ', torch.cuda.max_memory_allocated())
     model_unrolled = self._compute_unrolled_model(input_train, target_train, eta, network_optimizer)
     loss = model_unrolled._loss(input_valid, target_valid)
     grads = torch.autograd.grad(loss, model_unrolled.arch_parameters(), retain_graph=True)
