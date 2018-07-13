@@ -1,11 +1,12 @@
 import torch
 import numpy as np
 import torch.nn as nn
-
+import sys 
+import logging
 from torch.autograd import Variable
 from model_search import Network
 
-import logging
+
 
 log_format = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
